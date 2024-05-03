@@ -1,0 +1,9 @@
+[Unit]
+Description=docker-compose manager timer
+
+[Timer]
+OnUnitActiveSec=20s
+OnBootSec=20s
+
+[Install]
+WantedBy=timers.target

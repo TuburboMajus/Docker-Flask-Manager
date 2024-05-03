@@ -1,0 +1,24 @@
+[app]
+prod = true
+host = '0.0.0.0'
+port = 6498
+threaded = true
+debug = false
+
+ssl = false
+ssl_key = "resources/key.pem"
+ssl_cert = "resources/cert.pem"
+ssl_encapsulated = false
+
+templates_folder = "front/templates"
+static_folder = "front/static"
+secret_key = ""
+
+[storage.credentials]
+host = '0.0.0.0'
+port = 3306
+database = 'dockermaster'
+
+[temod]
+bound_database = 'mysql'
+core_directory = "core"

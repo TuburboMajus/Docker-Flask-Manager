@@ -1,0 +1,9 @@
+Flask==3.0.2
+Flask_Login==0.6.3
+mysql-connector-python==8.3.0
+packaging==24.0
+temod==2.0.11
+temod_flask==2.0.4
+toml==0.10.2
+gunicorn==21.2.0
+docker==7.0.0

@@ -1,0 +1,23 @@
+{%- with lychee_external_port = GlobalOps.get_unused_port() -%}
+container:
+  lychee-crm:
+    container-name: lychee-crm-{{options['id']+""}}
+    external-port: {{lychee_external_port}}
+    admin-firstname: {{options.get('lychee-crm',{}).get('admin-firstname',default['lychee-crm']['admin-firstname'])}}
+    admin-lastname: {{options.get('lychee-crm',{}).get('admin-lastname',default['lychee-crm']['admin-lastname'])}}
+    admin-username: {{options.get('lychee-crm',{}).get('admin-username',default['lychee-crm']['admin-username'])}}
+    admin-password: {{options.get('lychee-crm',{}).get('admin-password',default['lychee-crm']['admin-password'])}}
+    admin-sex: {{options.get('lychee-crm',{}).get('admin-sex',default['lychee-crm']['admin-sex'])}}
+    admin-birthdate: {{options.get('lychee-crm',{}).get('admin-birthdate',default['lychee-crm']['admin-birthdate'])}}
+  mariadb:
+    container-name: lychee-crm-mdb-{{options['id']+""}}
+    external-port: {{GlobalOps.get_unused_port(exclude=lychee_external_port)}}
+    db-root-password: {{options.get('mariadb',{}).get('db-root-password',default['mariadb']['db-root-password'])}}
+    db-user: {{options.get('mariadb',{}).get('db-user',default['mariadb']['db-user'])}}
+    db-port: {{options.get('mariadb',{}).get('db-port',default['mariadb']['db-port'])}}
+    db-password: {{options.get('mariadb',{}).get('db-password',default['mariadb']['db-password'])}}
+    db-name: {{options.get('mariadb',{}).get('db-name',default['mariadb']['db-name'])}}
+{%- endwith -%}
+
+
+

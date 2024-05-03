@@ -1,0 +1,41 @@
+version: "3.5"
+services:
+    lychee-crm:
+        image: kodytn/lychee-crm:1.0.0
+        container_name: {{container['lychee-crm']['container-name']}}
+        ports:
+            - "{{container['lychee-crm']['external-port']}}:5000"
+        environment:
+            - LYCHEE_CRM_DB_HOST={{Dockerd.get_default_bridge()['IPAM']['Config'][0]['Gateway'].__str__()}}
+            - LYCHEE_CRM_DB_PORT={{container['mariadb']['external-port']}}
+            - LYCHEE_CRM_DB_USER={{container['mariadb']['db-user']}}
+            - LYCHEE_CRM_DB_PASSWORD={{container['mariadb']['db-password']}}
+            - LYCHEE_CRM_DB_DATABASE={{container['mariadb']['db-name']}}
+            - LYCHEE_CRM_ADMIN_FIRSTNAME={{container['lychee-crm']['admin-firstname']}}
+            - LYCHEE_CRM_ADMIN_LASTNAME={{container['lychee-crm']['admin-lastname']}}
+            - LYCHEE_CRM_ADMIN_SEX={{container['lychee-crm']['admin-sex']}}
+            - LYCHEE_CRM_ADMIN_BIRTHDATE={{container['lychee-crm']['admin-birthdate']}}
+            - LYCHEE_CRM_ADMIN_USERNAME={{container['lychee-crm']['admin-username']}}
+            - LYCHEE_CRM_ADMIN_PASSWORD={{container['lychee-crm']['admin-password']}}
+        depends_on:
+            mariadb:
+                condition: service_healthy
+    mariadb:
+        image: mariadb:10
+        container_name: {{container['mariadb']['container-name']}}
+        ports:
+            - '{{container['mariadb']['external-port']}}:{{container['mariadb']['db-port']}}'
+        volumes:
+            - ./volumes/mariadb:/var/lib/mysql
+        environment:
+            - MARIADB_ROOT_PASSWORD={{container['mariadb']['db-root-password']}}
+            - MARIADB_USER={{container['mariadb']['db-user']}}
+            - MARIADB_PORT={{container['mariadb']['db-port']}}
+            - MARIADB_PASSWORD={{container['mariadb']['db-password']}}
+            - MARIADB_DATABASE={{container['mariadb']['db-name']}}
+        command: --character-set-server=utf8 --collation-server=utf8_unicode_ci
+        healthcheck:
+            interval: 30s
+            retries: 3
+            test: ["CMD", "healthcheck.sh", "--su-mysql", "--connect", "--innodb_initialized"]
+            timeout: 30s
