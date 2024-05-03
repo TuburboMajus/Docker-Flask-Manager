@@ -52,7 +52,7 @@ class DockerComposeOrdersHandler(object):
 			"dockerContainers": MysqlEntityStorage(entities.DockerContainer,**self.mysql_credentials),
 			"dockerCompositions": MysqlEntityStorage(entities.DockerComposition,**self.mysql_credentials),
 			"dockerComposeOrders": MysqlEntityStorage(entities.DockerComposeOrder,**self.mysql_credentials),
-			"dockerCompositionContainers": MysqlEntityStorage(entities.DockerCompositionContainer,**self.mysql_credentials),
+			"dockerCompositionContainers": MysqlEntityStorage(entities.DockerCompositionContainer,**self.mysql_credentials)
 		}
 
 
@@ -64,11 +64,19 @@ class DockerComposeOrdersHandler(object):
 		if order['args'] is not None:
 			cmd.append(order['args'])
 		LOGGER.info(f"Launching docker-compose with cmd {' '.join(cmd)}")
+		std_err = ""
 		try:
-			output = subprocess.check_output(cmd)
+			pipes = subprocess.Popen(cmd,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			std_out, std_err = pipes.communicate()
+			LOGGER.info(f"docker-compose cmd returned with exit code : {pipes.returncode}")
+			if pipes.returncode != 0:
+				LOGGER.error(f"STD ERR: ")
+				LOGGER.error(f"{std_err}")
 		except:
 			LOGGER.error(f"Error executing docker-compose cmd for order {order['id']}")
 			LOGGER.error(traceback.format_exc())
+			LOGGER.error(f"STD ERR: ")
+			LOGGER.error(f"{std_err}")
 			return False
 		os.chdir(cwd)
 
@@ -78,11 +86,16 @@ class DockerComposeOrdersHandler(object):
 		client = docker.DockerClient()
 		for service, params in composer_file['services'].items():
 			container_name = params['container_name']
+			LOGGER.info(f"Fetching container by name {container_name}")
 			container = client.containers.get(container_name)
+			LOGGER.info(f"Container found: {container.id}")
 			self.storages['dockerContainers'].create(entities.DockerContainer(
 				id=container.id,
 				name=container_name,
 				image=params['image'],
+			))
+			self.storages['dockerCompositionContainers'].create(entities.DockerCompositionContainer(
+				composition=composition['id'], container=container.id
 			))
 			LOGGER.info(f"Container {container.id} linked to composition {composition['id']}")
 		client.close()

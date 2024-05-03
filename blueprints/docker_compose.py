@@ -10,6 +10,7 @@ from jinja2 import Template as JinjaTemplate
 from pathlib import Path
 
 import traceback
+import docker
 import shutil
 import json
 import yaml
@@ -88,9 +89,28 @@ def docker_composer_up():
 
 	data = {"id": dockerid}
 	data.update(config)
-	return 	{"status":"ok", "data": data}
+	return 	Response(response=json.dumps({"status":"ok", "data": data}),status=200)
 
  	
+@docker_compose_blueprint.route('/status/<string:composition>', methods=['GET'])
+@login_required
+def docker_composer_status(composition):
+
+	composition = DockerComposition.storage.get(id=composition)
+	if composition is None:
+		return Response(response={"status":"error","error":"composition not found"},status=404)
+
+	containers = DockerCompositionContainer.storage.list(composition=composition['id'])
+	stats = {}
+	client = docker.DockerClient()
+	for container in containers:
+		cnt = client.containers.get(container['container'])
+		stats[container['container']] = {"status":cnt.status}
+	client.close()
+
+	data = {"overview":{"status":all([stat['status'] == "running" for stat in stats.values()])},"containers": stats}
+	return 	Response(response=json.dumps({"status":"ok", "data": data}),status=200)
+
 
 
 
