@@ -21,12 +21,12 @@ else
 		ssl_cert=`python -c "import toml, os; print(toml.load(os.path.join('$SCRIPTPATH','config.toml'))['app']['ssl_cert']);"`
 		ssl_key=`python -c "import toml, os; print(toml.load(os.path.join('$SCRIPTPATH','config.toml'))['app']['ssl_key']);"`
 		if [ ! -f "$ssl_cert" ]; then
-			echo "Cannot find the ssl certificate file mnetionned in the config file. Aborting execution."
+			echo "Cannot find the ssl certificate file mentionned in the config file. Aborting execution."
 			echo "SSL Cert location: $ssl_cert"
 			exit 1
 		fi
 		if [ ! -f "$ssl_key" ]; then
-			echo "Cannot find the ssl key file mnetionned in the config file. Aborting execution."
+			echo "Cannot find the ssl key file mentionned in the config file. Aborting execution."
 			echo "SSL Key location: $ssl_key"
 			exit 1
 		fi
