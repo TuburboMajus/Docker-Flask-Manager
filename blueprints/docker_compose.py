@@ -86,7 +86,9 @@ def docker_composer_up():
 			args="-d"
 		))
 
-	return 	{"status":"ok", "data": {"id": dockerid}}
+	data = {"id": dockerid}
+	data.update(config)
+	return 	{"status":"ok", "data": data}
 
  	
 
