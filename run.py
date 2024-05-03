@@ -70,7 +70,7 @@ def build_app(**app_configuration):
 	app.config['CUSTOM_CONFIG'] = {k:v for k,v in config['app'].items() if not type(v) is dict} 
 
 	# ** Section ** Blueprint
-	app.register_blueprint(docker_compose_blueprint.setup(config.get('blueprints',{}).get('docker_compose',{})))
+	app.register_blueprint(docker_compose_blueprint.setup(config.get('blueprints',{}).get('docker_compose',{})),url_prefix="compose")
 	app.register_blueprint(login_blueprint.setup(config.get('blueprints',{}).get('login',{})))
 	# ** EndSection ** Blueprint
 
