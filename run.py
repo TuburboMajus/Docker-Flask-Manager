@@ -79,7 +79,10 @@ def build_app(**app_configuration):
 		joins.AccountFile, "mysql", logins=['username','mdp'], **config['storage']['credentials']
 	))
 	AUTHENTICATOR.init_app(app)
-	__builtins__.AUTHENTICATOR = AUTHENTICATOR
+	try:
+		__builtins__.AUTHENTICATOR = AUTHENTICATOR
+	except:
+		__builtins__['AUTHENTICATOR'] = AUTHENTICATOR
 	# ** EndSection ** Authentification
 
 	return app
