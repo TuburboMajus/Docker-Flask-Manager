@@ -142,7 +142,7 @@ def docker_composer_up():
 			warnings.append("setup-nginx is set to True but no nginx_config file found")
 
 	data = {"id": dockerid}
-	data.update({"config":config})
+	data.update(config)
 	if len(warnings) > 0:
 		data.update({"warnings":warnings})
 	return 	Response(response=json.dumps({"status":"ok", "data": data}),status=200)
