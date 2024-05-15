@@ -164,7 +164,11 @@ def docker_composer_status(composition):
 		stats[container['container']] = {"status":cnt.status}
 	client.close()
 
-	data = {"overview":{"status":all([stat['status'] == "running" for stat in stats.values()])},"containers": stats}
+	overview_status = "sick"
+	if all([stat['status'] == "running" for stat in stats.values()]):
+		overview_status = "running"
+
+	data = {"overview":{"status":overview_status},"containers": stats}
 	return 	Response(response=json.dumps({"status":"ok", "data": data}),status=200)
 
 
