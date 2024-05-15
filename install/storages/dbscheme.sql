@@ -48,8 +48,24 @@ create table dockerComposeOrder(
     cmd varchar(50) not null,
     args varchar(300),
     status varchar(20),
+    createdAt datetime not null,
+    updatedAt datetime,
     foreign key (composition) references dockerComposition(id)
 );
+
+
+/***** NGINX *****/
+
+create table nginxOrder(
+    id varchar(36) primary key not null,
+    cmd varchar(50) not null,
+    baseconf varchar(300),
+    targetconf varchar(300),
+    status varchar(20),
+    createdAt datetime not null,
+    updatedAt datetime
+);
+
 
 /***** USER *****/
 

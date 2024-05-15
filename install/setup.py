@@ -1,5 +1,5 @@
 from temod.storage.mysql import MysqlEntityStorage
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, check_output
 from getpass import getpass
 from pathlib import Path
 from uuid import uuid4 
@@ -20,7 +20,7 @@ import toml
 import re
 
 
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
 
 
 def search_existing_database(credentials):
@@ -118,21 +118,47 @@ def install_dockcoman_service(root_path, virtual_env, logging_dir, services_dir)
 	return True
 
 
+def is_nginx_installed():
+	try:
+		check_output(["nginx","-v"])
+		return True
+	except:
+		pass
+	return False
+
+
+def is_docker_compose_installed():
+	try:
+		check_output(["docker-compose","--version"])
+		return True
+	except:
+		pass
+	return False
+
+
 def setup(app_paths, args):
+
+	if not is_docker_compose_installed():
+		LOGGER.error("docker-compose is not installed on this server. Install it using: apt install docker-compose")
+		return False
+
+	if not is_nginx_installed():
+		LOGGER.error("Nginx is not installed on this server. Install it using: apt install nginx")
+		return False
+
+	credentials = common_funcs.get_mysql_credentials(no_confirm=args.accept_all)
+	already_created = search_existing_database(credentials)
+	if already_created:
+		if not confirm_database_overwrite():
+			LOGGER.warning("If you which to just update the app, run the script install/update.py")
+			return False
 
 	virtual_env = common_funcs.detect_virtual_env(app_paths['root'])
 	logging_dir = args.logging_dir if not args.quiet else None
 	if not install_dockcoman_service(app_paths['root'], virtual_env, logging_dir, args.services_dir):
 		return False
 
-	credentials = common_funcs.get_mysql_credentials(no_confirm=args.accept_all)
 	admin_infos = get_admin_infos(no_confirm=args.accept_all)
-
-	already_created = search_existing_database(credentials)
-	if already_created:
-		if not confirm_database_overwrite():
-			LOGGER.warning("If you which to just update the app, run the script install/update.py")
-			return False
 
 	with open(app_paths['mysql_schema_file']) as file:
 		if not common_funcs.execute_mysql_script(credentials, file.read().replace("$database",credentials['database'])):
@@ -143,6 +169,7 @@ def setup(app_paths, args):
 	common_funcs.save_toml_config(template_config, app_paths['config_file'])
 
 	return install_preset_objects(credentials, admin_infos)
+
 
 if __name__ == "__main__":
 

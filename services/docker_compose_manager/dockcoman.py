@@ -3,6 +3,7 @@ from temod.storage import MysqlEntityStorage
 from temod.base.condition import Superior
 
 from datetime import datetime
+from pathlib import Path
 
 import subprocess
 import traceback
@@ -129,6 +130,7 @@ class DockerComposeOrdersHandler(object):
 			else:
 				order['status'] = "failed"
 				LOGGER.error(f"Handling order {order['id']} failed")
+			order['updatedAt'] = datetime.now()
 			self.storages['dockerComposeOrders'].updateOnSnapshot(order)
 			orders_handled.append(result)
 
@@ -138,6 +140,72 @@ class DockerComposeOrdersHandler(object):
 
 		return all(orders_handled)
 		
+
+
+class NginxOrdersHandler(object):
+	"""docstring for NginxOrdersHandler"""
+	def __init__(self, **mysql_credentials):
+		super(NginxOrdersHandler, self).__init__()
+		self.mysql_credentials = mysql_credentials
+		self.nginx_directory = Path("/etc/nginx/sites-enabled")
+		self.storages = {
+			"nginxOrders": MysqlEntityStorage(entities.NginxOrder,**self.mysql_credentials)
+		}
+
+	def handle_order_setup(self,order):
+		try:
+			target_file = str(self.nginx_directory.joinpath(order['targetconf']))
+			base_file = order['baseconf']
+			with open(target_file,'w') as file:
+				with open(base_file) as base:
+					file.write(base.read())
+			LOGGER.info(f"Config copied successfully from {base_file} to {target_file}")
+			return True
+		except:
+			LOGGER.error(f"Error while copying Nginx config from {base_file} to {target_file}")
+			LOGGER.error(traceback.format_exc())
+		return False
+
+	def handle_order(self, order):
+		if order['cmd'] == 'setup':
+			return self.handle_order_setup(order)
+		return True	
+
+	def restart_nginx_service(self):
+		try:
+			subprocess.check_output(["service","nginx","restart"])
+			LOGGER.info(f"Nginx service restarted successfully")
+			return True
+		except:
+			LOGGER.error(f"Error while restarting nginx service")
+			LOGGER.error(traceback.format_exc())
+		return False
+
+
+	def handle(self):
+		orders = self.storages['nginxOrders'].list(status=None)
+
+		orders_handled = []
+		for order in orders:
+			LOGGER.info(f"Handling nginx order {order['id']}")
+			order.takeSnapshot()
+			result = self.handle_order(order)
+			if result:
+				order['status'] = "completed"
+				LOGGER.info(f"Order {order['id']} handled with success")
+			else:
+				order['status'] = "failed"
+				LOGGER.error(f"Handling nginx order {order['id']} failed")
+			order['updatedAt'] = datetime.now()
+			self.storages['nginxOrders'].updateOnSnapshot(order)
+			orders_handled.append(result)
+
+		if len(orders_handled) == 0:
+			LOGGER.info("No nginx orders to handle")
+			return None
+
+		return self.restart_nginx_service() and all(orders_handled)
+
 
 def already_running(**mysql_credentials):
 	DockcomanJob = MysqlEntityStorage(entities.Job, **mysql_credentials).get(name=DOCKCOMAN_JOB_NAME)
@@ -176,6 +244,16 @@ def launch(config):
 		else:
 			LOGGER.warning("Some orders did not get handled successfully.")
 			exit_code=2
+
+	handler = NginxOrdersHandler(**config["storage"]["credentials"])
+	results = handler.handle()	
+	if results is not None:
+		if results:
+			LOGGER.info("All nginx orders handled successfully.")
+		else:
+			LOGGER.warning("Some nginx orders did not get handled successfully.")
+			exit_code=2
+
 	return exit_code
 
 if __name__ == "__main__":

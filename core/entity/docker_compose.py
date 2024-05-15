@@ -36,5 +36,7 @@ class DockerComposeOrder(Entity):
 		{"name":"cmd","type":StringAttribute, "required":True, "non_empty": True, "is_nullable": False, "max_length":50},
 		{"name":"args","type":StringAttribute, "max_length":300},
 		{"name":"status","type":StringAttribute, "max_length":20},
+		{"name":"createdAt","type":DateTimeAttribute, "required":True, "is_nullable": False},
+		{"name":"updatedAt","type":DateTimeAttribute}
 	]
 # ** EndSection ** Entity_DockerComposeOrder
