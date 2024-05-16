@@ -83,6 +83,23 @@ def docker_composer_check(composition, version):
 	return 	Response(response=json.dumps({"status":"ok", "data":data}),status=200)
 
 
+@docker_compose_blueprint.route('/config/<string:composition>/<string:version>', methods=['GET'])
+@login_required
+def composition_config(composition, version):
+
+	templates = get_configuration("TemplatesDirectory").subStorage(
+		composition,createDir=False
+	).subStorage(
+		version,createDir=False
+	)
+
+	config = {}
+	if templates.has('input.yml'):
+		config = yaml.safe_load(templates.read('input.yml'))
+
+	return 	Response(response=json.dumps({"status":"ok", "data":config}),status=200)
+
+
 @docker_compose_blueprint.route('/setup', methods=['POST'])
 @login_required
 def docker_composer_up():
