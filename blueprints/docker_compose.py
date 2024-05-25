@@ -77,7 +77,7 @@ def docker_composer_check(composition, version):
 	)
 
 	data = {"files":{}, "errors":[]}
-	for file in ['default.yml','config.yml','docker-compose.yml']:
+	for file in ['default.yml','config.yml','docker-compose.yml.template']:
 		data['files'][file] = templates.has(file) 
 
 	return 	Response(response=json.dumps({"status":"ok", "data":data}),status=200)
@@ -95,7 +95,13 @@ def composition_config(composition, version):
 
 	config = {}
 	if templates.has('input.yml'):
-		config = yaml.safe_load(templates.read('input.yml'))
+		config['user-input'] = yaml.safe_load(templates.read('input.yml'))
+	if templates.has('controlboard.yml'):
+		config['controlboard'] = yaml.safe_load(templates.read('controlboard.yml'))
+	if templates.has('default.yml'):
+		config['default'] = yaml.safe_load(templates.read('default.yml'))
+	if templates.has('services.yml'):
+		config['services'] = yaml.safe_load(templates.read('services.yml'))
 
 	return 	Response(response=json.dumps({"status":"ok", "data":config}),status=200)
 
